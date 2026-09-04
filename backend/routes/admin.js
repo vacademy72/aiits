@@ -81,7 +81,17 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 *
 // a Put's key). Same alias convention already used in routes/tests.js's
 // dashboard list and routes/results.js's /my-results.
 function aliasTest(t) {
-  return { ...t, _id: t.testId, questions: (t.questions || []).map(q => ({ ...q, _id: q.questionId })) };
+  // isPublished is stored in DynamoDB as the STRING 'true'/'false' (GSI key
+  // attributes can't be boolean — see testModel.js's table doc comment).
+  // The admin frontend does plain JS truthy checks on isPublished
+  // (`t.isPublished ? 'Unpublish' : 'Publish'`), and the string 'false' is
+  // truthy — so passing the raw stored value straight through made the
+  // Published/Draft badge and Publish/Unpublish button permanently stuck
+  // showing "Published" regardless of the real state, even though each
+  // click was correctly flipping the actual stored value server-side.
+  // Coerced to a real boolean here so every API response through this
+  // function (list/create/update) reflects the true state.
+  return { ...t, _id: t.testId, isPublished: t.isPublished === 'true', questions: (t.questions || []).map(q => ({ ...q, _id: q.questionId })) };
 }
 
 router.get('/tests', async (req, res) => {

@@ -144,10 +144,10 @@ textarea{resize:vertical}
 .gallery-img-caption strong{display:block;font-size:12px;font-weight:700;color:#fff!important}
 .gallery-img-caption span{display:block;font-size:11px;opacity:0.85;color:#fff!important;margin-top:2px}
 /* FOOTER */
-.footer{background:var(--text);color:#ccc;padding:36px 32px;text-align:center}
+.footer{background:#1a1a1a;color:#ccc;padding:36px 32px;text-align:center}
 .footer-inner{max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:6px}
 .footer-copy{font-size:12px;color:var(--text-muted);margin-top:4px}
-.footer-credit{font-size:11px;color:var(--text-muted);margin-top:6px;opacity:0.75}
+.footer-credit{font-size:13px;font-weight:700;color:var(--gold-light);margin-top:8px}
 /* AUTH */
 .auth-layout{display:flex;min-height:100vh}
 .auth-panel-left{flex:0 0 340px;background:linear-gradient(160deg,var(--gold-pale),#fff);border-right:1.5px solid var(--gold-border);display:flex;align-items:center;justify-content:center;padding:40px}
@@ -594,7 +594,6 @@ textarea{resize:vertical}
         <input type="text" id="chat-input" placeholder="Type a message..." maxlength="300" style="flex:1" onkeydown="if(event.key==='Enter')sendChatMsg()">
         <button class="btn btn-gold" onclick="sendChatMsg()" id="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
       </div>
-      <p style="font-size:11px;color:var(--text-muted);margin-top:6px">Messages are not stored — they disappear when the page refreshes.</p>
     </div>
 
     <div id="dash-tab-gallery" class="dtab">
@@ -834,7 +833,7 @@ textarea{resize:vertical}
   </div>
 </div>
 <script>
-var S={user:null,currentTest:null,answers:{},qIdx:0,startTime:null,timerIv:null,timerTotal:0,timerLeft:0,violations:0,saving:false,currentTestId:null};
+var S={user:null,currentTest:null,answers:{},qIdx:0,startTime:null,timerIv:null,timerTotal:0,timerLeft:0,violations:0,saveSeq:0,currentTestId:null};
 var socket=null;
 
 // THEME (dark/normal — default normal, per-browser via localStorage)
@@ -1421,41 +1420,49 @@ function selectOpt(i){
 }
 function clearAns(){delete S.answers[S.qIdx];renderQ(S.qIdx);}
 function saveNext(){
-  if(!S.currentTest||S.saving)return;
+  if(!S.currentTest)return;
   var n=S.qIdx+1;
   var atLast=n>=S.currentTest.questions.length;
-  persistProgress().then(function(ok){
-    if(!ok)return; // save failed -- stay on this question, in-memory answers are untouched, student can retry
-    if(!atLast)renderQ(n);else toast('Last question -- ready to submit?','info');
-  });
+  // Instant navigation: the save happens in the background (with its own
+  // retry/error handling below) instead of the student waiting on a
+  // network round-trip before they can move on. Final Submit always sends
+  // the live in-memory S.answers directly, so grading correctness never
+  // depends on a background save having landed yet — only "resume after a
+  // crash/disconnect before Submit" does, which is what the retries below
+  // are for.
+  persistProgressInBackground();
+  if(!atLast)renderQ(n);else toast('Last question -- ready to submit?','info');
 }
-function persistProgress(){
-  if(!S.currentTest)return Promise.resolve(true);
-  S.saving=true;
-  var btn=document.getElementById('save-next-btn');
-  var origHtml=btn?btn.innerHTML:null;
-  if(btn){btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Saving...';}
-  function cleanup(){S.saving=false;if(btn){btn.disabled=false;btn.innerHTML=origHtml;}}
+function persistProgressInBackground(){
+  if(!S.currentTest)return;
+  var mySeq=++S.saveSeq;
+  // savedAnswers/violations reference the SAME live objects the student
+  // keeps editing (S.answers is mutated in place elsewhere, not
+  // reassigned) — so if this attempt has to retry, JSON.stringify at
+  // retry time naturally picks up whatever's newest, without needing to
+  // re-capture anything.
+  attemptSave({savedAnswers:S.answers,violations:S.violations},mySeq,0);
+}
+function attemptSave(payload,mySeq,retryCount){
+  if(!S.currentTest)return;
   var controller=(typeof AbortController!=='undefined')?new AbortController():null;
-  var timedOut=false;
-  var timeoutId=controller?setTimeout(function(){timedOut=true;controller.abort();},10000):null;
-  return api('/api/tests/'+S.currentTest._id+'/save-progress',{
-    method:'POST',
-    body:JSON.stringify({savedAnswers:S.answers,violations:S.violations}),
-    signal:controller?controller.signal:undefined
+  var timeoutId=controller?setTimeout(function(){controller.abort();},10000):null;
+  api('/api/tests/'+S.currentTest._id+'/save-progress',{
+    method:'POST', body:JSON.stringify(payload), signal:controller?controller.signal:undefined
   }).then(function(data){
     if(timeoutId)clearTimeout(timeoutId);
-    cleanup();
-    if(data&&data.alreadySubmitted){
-      toast('This test was already submitted.','info');
-      return false; // stop saveNext() from navigating -- nothing further to save
-    }
-    return true;
+    // Only act on this if a newer saveNext() hasn't already superseded it
+    // -- an older attempt's own result is moot once a fresher one exists.
+    if(mySeq!==S.saveSeq)return;
+    if(data&&data.alreadySubmitted)toast('This test was already submitted.','info');
   }).catch(function(err){
     if(timeoutId)clearTimeout(timeoutId);
-    cleanup();
-    toast(timedOut?'Save timed out -- check your connection and try again.':'Could not save your answer -- try again.','error');
-    return false;
+    if(mySeq!==S.saveSeq)return; // superseded by a newer save -- stop retrying this one
+    if(retryCount<2){
+      setTimeout(function(){ if(mySeq===S.saveSeq)attemptSave(payload,mySeq,retryCount+1); },1500*(retryCount+1));
+    } else {
+      toast('Your last answer may not have saved -- check your connection.','error');
+    }
   });
 }
 function goQ(d){var n=S.qIdx+d;if(n>=0&&n<S.currentTest.questions.length)renderQ(n);}
