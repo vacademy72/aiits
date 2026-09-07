@@ -108,7 +108,7 @@ app.get('/api/debug-firebase', (_,res) => {
 });
 app.get('/robots.txt', (_,res) => { res.type('text/plain'); res.send('User-agent: *\nAllow: /\nDisallow: /api/\nSitemap: https://aitts.in/sitemap.xml'); });
 app.get('/sitemap.xml', (_,res) => {
-  const base='https://aitts.in/', d=new Date().toISOString().split('T')[0];
+  const base='https://aitts.in', d=new Date().toISOString().split('T')[0];
   res.type('application/xml');
   res.send('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>'+base+'/</loc><lastmod>'+d+'</lastmod><priority>1.0</priority></url><url><loc>'+base+'/register</loc><priority>0.8</priority></url><url><loc>'+base+'/login</loc><priority>0.7</priority></url></urlset>');
 });
