@@ -10,6 +10,7 @@ const admin       = require('../utils/firebaseAdmin');
 const { authenticateAdmin } = require('../middleware/auth');
 const { invalidate } = require('../utils/leaderboardCache');
 const { uploadTestImages, uploadBuffer } = require('../utils/cloudinary');
+const { pingIndexNow } = require('../utils/indexNow');
 
 // One-time repair: recompute totalTests/totalMarks/highestMarks on every
 // User from actual Results (the source of truth), instead of trusting
@@ -122,6 +123,10 @@ router.patch('/tests/:id/publish', async (req, res) => {
     const next = test.isPublished !== 'true';
     await Test.setPublished(req.params.id, next);
     res.json({ isPublished: next });
+    // Newly published (or unpublished) tests change what's on the homepage
+    // (test counts, leaderboards) -- let search engines know right away
+    // rather than waiting for their next scheduled crawl.
+    if (next) pingIndexNow('/');
   } catch(err) { res.status(500).json({ error: err.message }); }
 });
 
