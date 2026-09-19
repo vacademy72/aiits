@@ -53,3 +53,20 @@ exports.authenticateAdmin = (req, res, next) => {
     res.status(401).json({ error: 'Admin session expired. Please login again.' });
   }
 };
+
+// Accepts EITHER an admin session or a student session — for routes both
+// the student app and the admin panel need to read (e.g. the global
+// leaderboard). Tries the admin cookie first (cheap, synchronous JWT
+// verify) since the admin panel never sends a Firebase ID token at all, so
+// running authenticateStudent first would always fail loudly for admin
+// requests before this ever got a chance to fall back.
+exports.authenticateStudentOrAdmin = (req, res, next) => {
+  try {
+    const adminToken = req.cookies.adminToken || (req.headers.authorization || '').replace('Bearer ', '').trim();
+    if (adminToken) {
+      const decoded = jwt.verify(adminToken, process.env.JWT_SECRET);
+      if (decoded.role === 'admin') { req.admin = decoded; return next(); }
+    }
+  } catch { /* not a valid admin token — fall through to student auth below */ }
+  return exports.authenticateStudent(req, res, next);
+};

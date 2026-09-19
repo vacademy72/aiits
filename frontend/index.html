@@ -1877,6 +1877,7 @@ function onLbTestSelect(testId){
 
 // ── Chat ─────────────────────────────────────────────────────────────────────
 var chatMutedLocal=false;
+var chatBlockedLocal=false; // am I individually blocked? kept separate from the global mute so the UI can say which one applies
 var chatInitDone=false;
 var CHAT_MUTE_KEY='aiits_chat_muted';
 var CHAT_BLOCKED_KEY='aiits_chat_blocked';
@@ -1888,9 +1889,13 @@ function saveMuteState(muted){
 function loadMuteState(){
   try{return localStorage.getItem(CHAT_MUTE_KEY)==='1';}catch(e){return false;}
 }
-// Persist blocked students list
+// Persist blocked students list — keyed by uid (not name: names can collide
+// between students, and the server's own block list is keyed by uid too)
 function loadBlockedList(){
   try{return JSON.parse(localStorage.getItem(CHAT_BLOCKED_KEY)||'[]');}catch(e){return[];}
+}
+function saveBlockedList(list){
+  try{localStorage.setItem(CHAT_BLOCKED_KEY,JSON.stringify(list));}catch(e){}
 }
 var chatMessages=[]; // populated from server (GET /api/chat/messages) — messages persist server-side until an admin deletes them
 // Restore mute state immediately on load
@@ -1901,20 +1906,39 @@ function showChatUnreadDot(show){
   dots.forEach(function(d){d.style.display=show?'block':'none';});
 }
 
-function applyChatMuteUI(muted){
-  chatMutedLocal=muted;
-  saveMuteState(muted);
+// Renders the combined effect of the global mute AND my own individual
+// block — either one disables sending, with a placeholder that says which.
+function applyChatMuteUI(muted,blocked){
+  if(typeof muted==='boolean')chatMutedLocal=muted;
+  if(typeof blocked==='boolean')chatBlockedLocal=blocked;
+  saveMuteState(chatMutedLocal);
+  var disabled=chatMutedLocal||chatBlockedLocal;
   var badge=document.getElementById('chat-mute-badge');
   var inp=document.getElementById('chat-input');
   var btn=document.getElementById('chat-send-btn');
-  if(badge)badge.classList.toggle('hidden',!muted);
-  if(inp){inp.disabled=muted;inp.placeholder=muted?'Chat muted by admin':'Type a message...';}
-  if(btn)btn.disabled=muted;
+  if(badge)badge.classList.toggle('hidden',!disabled);
+  if(inp){inp.disabled=disabled;inp.placeholder=chatBlockedLocal?'You have been muted by admin':(chatMutedLocal?'Chat muted by admin':'Type a message...');}
+  if(btn)btn.disabled=disabled;
 }
 function initChat(){
   if(!window.socket)return;
-  // Apply persisted mute state immediately (before socket connects)
-  applyChatMuteUI(chatMutedLocal);
+  // Apply persisted mute state immediately (before socket connects / before
+  // the server round-trip below resolves), so the input doesn't briefly
+  // flash as enabled.
+  applyChatMuteUI(chatMutedLocal,chatBlockedLocal);
+
+  // Ask the server for the TRUE current state for me specifically. Relying
+  // only on localStorage (set from a live 'student-blocked' event) meant a
+  // student who wasn't connected at the exact moment an admin blocked them
+  // — or who opened a fresh browser/tab since — never found out, and could
+  // keep clicking Send with no feedback while the server silently dropped
+  // every message. This fetch is what makes a refresh actually reflect
+  // reality instead of just replaying whatever was last cached.
+  if(S.user&&S.user.id){
+    api('/api/chat/status?uid='+encodeURIComponent(S.user.id)).then(function(d){
+      applyChatMuteUI(d.muted,d.blocked);
+    }).catch(function(){});
+  }
 
   // Load message history from the server (persists until an admin deletes it)
   var box=document.getElementById('chat-box');
@@ -1938,7 +1962,7 @@ function initChat(){
   window.socket.on('chat-message',function(msg){
     // Check if this student is blocked - don't show their messages
     var blocked=loadBlockedList();
-    if(blocked.indexOf(msg.name)!==-1&&!msg.isAdmin)return;
+    if(blocked.indexOf(msg.uid)!==-1&&!msg.isAdmin)return;
     chatMessages.push(msg);
     appendChatMsg(msg,false);
     var chatTab=document.getElementById('dash-tab-chat');
@@ -1948,15 +1972,21 @@ function initChat(){
   });
 
   window.socket.on('chat-mute-changed',function(d){
-    applyChatMuteUI(d.muted);
+    applyChatMuteUI(d.muted,undefined);
   });
 
   window.socket.on('student-blocked',function(d){
-    // Admin blocked a student - update local blocked list
+    // Admin blocked/unblocked a student - update local blocked list (keyed
+    // by uid, matching what the server actually checks)
     var blocked=loadBlockedList();
-    if(d.blocked&&blocked.indexOf(d.name)===-1)blocked.push(d.name);
-    else if(!d.blocked)blocked=blocked.filter(function(n){return n!==d.name;});
-    try{localStorage.setItem(CHAT_BLOCKED_KEY,JSON.stringify(blocked));}catch(e){}
+    if(d.blocked&&blocked.indexOf(d.uid)===-1)blocked.push(d.uid);
+    else if(!d.blocked)blocked=blocked.filter(function(u){return u!==d.uid;});
+    saveBlockedList(blocked);
+    // If this is about ME, update my own send-ability live — don't make me
+    // wait for a refresh to find out I was just blocked (or unblocked).
+    if(S.user&&d.uid===String(S.user.id)){
+      applyChatMuteUI(undefined,!!d.blocked);
+    }
   });
 
   // Admin deleted a message (or cleared all) — reflect it live
@@ -1988,6 +2018,7 @@ function appendChatMsg(msg,skipScroll){
 
 function sendChatMsg(){
   if(chatMutedLocal){toast('Chat is muted by admin','error');return;}
+  if(chatBlockedLocal){toast('You have been muted by admin','error');return;}
   var inp=document.getElementById('chat-input');
   var text=(inp?inp.value:'').trim();
   if(!text)return;

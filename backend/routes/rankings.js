@@ -2,7 +2,7 @@ const express     = require('express');
 const router      = express.Router();
 const Result      = require('../dynamo/resultModel'); // was: const Result = require('../models/Result');
 const User        = require('../dynamo/userModel');   // was: const UserProfile = require('../models/UserProfile');
-const { authenticateStudent } = require('../middleware/auth');
+const { authenticateStudent, authenticateStudentOrAdmin } = require('../middleware/auth');
 const { getCached, safeBatch } = require('../utils/leaderboardCache');
 
 router.get('/test/:testId', authenticateStudent, async (req, res) => {
@@ -41,7 +41,12 @@ router.get('/test/:testId', authenticateStudent, async (req, res) => {
   } catch(err) { res.status(500).json({ error:err.message }); }
 });
 
-router.get('/leaderboard', authenticateStudent, async (req, res) => {
+// Admin panel's Analytics tab reads this same endpoint (no per-viewer data
+// like req.user is used below), but was sending its adminToken cookie
+// against a route gated by authenticateStudent — which only ever accepts a
+// Firebase student ID token — so every admin request 401'd and the
+// leaderboard silently never rendered (the frontend's .catch swallowed it).
+router.get('/leaderboard', authenticateStudentOrAdmin, async (req, res) => {
   try {
     const batch = safeBatch(req.query.batch);
     // No dedicated batch-scoped GSI for this legacy route (dead in the

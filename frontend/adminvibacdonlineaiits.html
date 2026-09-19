@@ -1050,9 +1050,25 @@ function deleteImage(id){
 // STUDENTS
 function loadAdminStudents(){
   var c=document.getElementById('students-table');if(!c)return;
-  api('/api/admin/students?limit=2000').then(function(r){
+  Promise.all([
+    api('/api/admin/students?limit=2000'),
+    refreshMutedStudents()
+  ]).then(function(res){
+    var r=res[0];
     S.allStudents=r.students;setEl('students-count',r.total);renderStudents(r.students);
   }).catch(function(err){c.innerHTML='<p style="color:#c53030">'+esc(err.message)+'</p>';});
+}
+// Pulls the REAL current blocked-uid list from the server into the local
+// mutedStudents cache. Without this, mutedStudents started as {} on every
+// page load with no idea which students were actually already blocked — so
+// right after a refresh every mute button showed "not muted" regardless of
+// truth, and clicking one could silently flip an already-blocked student
+// back to unblocked instead of actually muting them.
+function refreshMutedStudents(){
+  return api('/api/chat/blocked-students').then(function(r){
+    mutedStudents={};
+    (r.blockedUids||[]).forEach(function(uid){mutedStudents[uid]=true;});
+  }).catch(function(){});
 }
 function filterByBatch(batch){
   S.allStudentsBatch=batch;
@@ -1082,7 +1098,7 @@ function renderStudents(list){
     html+='<td style="font-size:11px">'+new Date(s.createdAt).toLocaleDateString('en-IN')+'</td>';
     html+='<td style="white-space:nowrap">';
     html+='<button class="btn btn-red btn-sm" style="margin-right:4px" onclick="deleteStudent(\''+s._id+'\',\''+esc(s.name)+'\')" title="Delete"><i class="fas fa-trash"></i></button>';
-    html+='<button class="btn btn-outline btn-sm" onclick="toggleMuteStudent(\''+esc(s.name)+'\',\''+s._id+'\')" id="mute-btn-'+s._id+'" title="Mute in chat"><i class="fas fa-microphone-slash"></i></button>';
+    html+='<button class="btn btn-outline btn-sm" style="'+(mutedStudents[s._id]?'background:#c53030;color:#fff':'')+'" onclick="toggleMuteStudent(\''+esc(s.name)+'\',\''+s._id+'\')" id="mute-btn-'+s._id+'" title="'+(mutedStudents[s._id]?'Unmute student':'Mute in chat')+'"><i class="fas fa-microphone-slash"></i></button>';
     html+='</td></tr>';
   });
   html+='</tbody></table></div>';
@@ -1106,7 +1122,7 @@ function loadCheatLogs(){
 }
 
 // MUTE STUDENT IN CHAT
-var mutedStudents={};
+var mutedStudents={}; // seeded from the server on load — see refreshMutedStudents()
 function toggleMuteStudent(name, id){
   var isMuted=!!mutedStudents[id];
   mutedStudents[id]=!isMuted;
@@ -1115,12 +1131,20 @@ function toggleMuteStudent(name, id){
   if(window.adminSocket){
     window.adminSocket.emit('admin-block-student',{name:name,uid:id,blocked:newState});
   }
+  // Students-table button
   var btn=document.getElementById('mute-btn-'+id);
   if(btn){
     btn.style.background=newState?'#c53030':'';
     btn.style.color=newState?'#fff':'';
     btn.title=newState?'Unmute student':'Mute in chat';
   }
+  // Every inline mute button in the chat window for this same student (they
+  // may have sent several messages, each with its own button)
+  document.querySelectorAll('.chat-mute-btn[data-uid="'+id+'"]').forEach(function(b){
+    b.style.background=newState?'#c53030':'';
+    b.style.color=newState?'#fff':'';
+    b.title=newState?'Unmute in chat':'Mute in chat';
+  });
   toast(newState?name+' muted in chat':name+' unmuted','success');
 }
 
@@ -1181,8 +1205,19 @@ function appendAdminChatMsg(msg){
   div.setAttribute('data-msgid',String(msg._id||msg.id||''));
   div.style.cssText='padding:7px 11px;border-radius:10px;max-width:85%;word-break:break-word;font-size:13px;align-self:flex-start;display:flex;justify-content:space-between;gap:8px;align-items:flex-start;'+(msg.isAdmin?'background:#fef3c7;border:1px solid #f0c040':'background:#fff;border:1px solid #e2e8f0');
   var msgId=msg._id||msg.id;
+  // Mute button for the sender, right inside the chat window — lets admin
+  // mute someone directly off a message they're reading, without switching
+  // to the Students tab and searching for that name. Not shown for Admin's
+  // own messages (msg.uid is only set for student messages — see server.js).
+  var muteBtn='';
+  if(!msg.isAdmin&&msg.uid){
+    var isMuted=!!mutedStudents[msg.uid];
+    muteBtn='<button class="chat-mute-btn" data-uid="'+esc(msg.uid)+'" onclick="toggleMuteStudent(\''+esc(msg.name)+'\',\''+esc(msg.uid)+'\')" title="'+(isMuted?'Unmute in chat':'Mute in chat')+'" style="background:'+(isMuted?'#c53030':'none')+';color:'+(isMuted?'#fff':'#4a5568')+';border:none;cursor:pointer;font-size:12px;flex-shrink:0;border-radius:4px;padding:2px 5px"><i class="fas fa-microphone-slash"></i></button>';
+  }
   div.innerHTML='<span><span style="font-weight:700;font-size:11px;color:'+(msg.isAdmin?'#b7791f':'#4a5568')+'">'+(msg.isAdmin?'👑 Admin':esc(msg.name)+' <span style="opacity:0.6;font-weight:400">('+esc(msg.batch)+')</span>')+'</span> <span style="opacity:0.5;font-size:10px">'+msg.time+'</span><br>'+esc(msg.text)+'</span>'+
-    (msgId?'<button onclick="deleteChatMsg(\''+msgId+'\')" title="Delete" style="background:none;border:none;color:#c53030;cursor:pointer;font-size:12px;flex-shrink:0"><i class="fas fa-trash"></i></button>':'');
+    '<span style="display:flex;gap:4px;flex-shrink:0">'+muteBtn+
+    (msgId?'<button onclick="deleteChatMsg(\''+msgId+'\')" title="Delete" style="background:none;border:none;color:#c53030;cursor:pointer;font-size:12px"><i class="fas fa-trash"></i></button>':'')+
+    '</span>';
   box.appendChild(div);
   box.scrollTop=box.scrollHeight;
 }
@@ -1205,7 +1240,12 @@ function initAdminChat(){
   // Load persisted history from the server (second Mongo DB — stays until an admin deletes it)
   var box=document.getElementById('admin-chat-box');
   if(box)box.innerHTML='<p style="text-align:center;color:#888;font-size:12px;margin:auto">Loading messages...</p>';
-  api('/api/chat/messages').then(function(msgs){
+  // Seed mutedStudents FIRST so the inline mute button on each message
+  // (added in appendAdminChatMsg) reflects real state right away, even if
+  // admin opens this tab without ever visiting the Students tab first.
+  refreshMutedStudents().then(function(){
+    return api('/api/chat/messages');
+  }).then(function(msgs){
     if(!box)return;
     box.innerHTML='';
     if(!msgs.length){box.innerHTML='<p style="text-align:center;color:#888;font-size:12px;margin:auto">Chat messages appear here in real-time.</p>';return;}
