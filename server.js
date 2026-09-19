@@ -63,7 +63,12 @@ const CANONICAL_HOST = 'aitts.in';
 // only one live, indexable URL per page instead of two.
 const HTML_FILE_REDIRECTS = { '/adminvibacdonlineaiits.html':'/adminvibacdonlineaiits', '/ad856eyqafggg.html':'/ad856eyqafggg', '/index.html':'/' };
 app.use((req,res,next) => {
-  if (req.path.startsWith('/api/')) return next(); // never redirect API calls — breaks CORS/preflight expectations
+  // never redirect API calls or Socket.IO's handshake/polling transport —
+  // both are hit directly on this host by the Cloudflare Worker and by
+  // socket.io-client, and redirecting them creates a loop: Worker follows
+  // the 301 back to aitts.in, which re-invokes the same Worker, which calls
+  // this host again. That loop is what caused the 522 outage on 2026-09-19.
+  if (req.path.startsWith('/api/') || req.path.startsWith('/socket.io/')) return next();
   const reqHost = (req.headers.host || '').toLowerCase();
   const proto   = (req.headers['x-forwarded-proto'] || req.protocol || 'https').split(',')[0].trim().toLowerCase();
 
@@ -73,11 +78,16 @@ app.use((req,res,next) => {
   } else if (reqHost.startsWith('www.')) {
     redirectTo = 'https://' + CANONICAL_HOST + req.originalUrl;
   } else if (reqHost === 'aiits.onrender.com') {
-    // Bing indexed the raw Render subdomain. The Cloudflare Worker still
-    // calls this host directly for /api/*, which is why that's excluded at
-    // the top of this middleware — only browser/crawler page traffic lands
-    // here and gets sent to the canonical domain instead.
-    redirectTo = 'https://' + CANONICAL_HOST + req.originalUrl;
+    // Bing indexed the raw Render subdomain, but the Worker also calls this
+    // host directly for things other than /api or /socket.io (this project
+    // may add more such internal endpoints later). To stay safe against
+    // future additions, only redirect requests that look like an actual
+    // browser page load (GET + Accept: text/html) — programmatic requests
+    // (fetch/XHR/websocket-polling) never send that Accept value, so they
+    // pass through untouched no matter what path they hit.
+    if (req.method === 'GET' && (req.headers.accept || '').includes('text/html')) {
+      redirectTo = 'https://' + CANONICAL_HOST + req.originalUrl;
+    }
   } else if (HTML_FILE_REDIRECTS[req.path]) {
     redirectTo = HTML_FILE_REDIRECTS[req.path];
   } else if (req.path.length > 1 && req.path.endsWith('/')) {
