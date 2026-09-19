@@ -72,6 +72,12 @@ app.use((req,res,next) => {
     redirectTo = 'https://' + CANONICAL_HOST + req.originalUrl;
   } else if (reqHost.startsWith('www.')) {
     redirectTo = 'https://' + CANONICAL_HOST + req.originalUrl;
+  } else if (reqHost === 'aiits.onrender.com') {
+    // Bing indexed the raw Render subdomain. The Cloudflare Worker still
+    // calls this host directly for /api/*, which is why that's excluded at
+    // the top of this middleware — only browser/crawler page traffic lands
+    // here and gets sent to the canonical domain instead.
+    redirectTo = 'https://' + CANONICAL_HOST + req.originalUrl;
   } else if (HTML_FILE_REDIRECTS[req.path]) {
     redirectTo = HTML_FILE_REDIRECTS[req.path];
   } else if (req.path.length > 1 && req.path.endsWith('/')) {
