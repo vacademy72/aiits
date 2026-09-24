@@ -117,12 +117,6 @@
   }
   .exhibit-cap{font-size:13px;color:var(--ink-soft);font-style:italic;margin-top:8px}
 
-  .other-list{margin:0;padding:0;list-style:none}
-  .other-list li{padding:10px 0;border-bottom:1px solid var(--rule)}
-  .other-list li:last-child{border-bottom:none}
-  .other-list b{font-weight:600}
-  .other-list span{color:var(--ink-soft);font-size:15px}
-
   footer{
     margin-top:64px;
     padding-top:22px;
@@ -190,7 +184,7 @@
     </div>
     <div class="build">
       <h3>PDF-to-test pipeline</h3>
-      <p>Coaching institutes hand me question papers as PDFs, not structured data. I built an extraction pipeline that reads the text layer, rasterizes pages, and pulls out embedded diagrams and tables locally first — only the extracted content, never the raw file, gets passed to an AI step that turns it into structured, gradable questions. Cuts what used to be hours of manual entry per test down to a review pass.</p>
+      <p>Coaching institutes hand me question papers as PDFs, not structured data. I don't extract anything locally — the pages go straight to an AI API, which hands back the text, diagrams, and tables already structured into gradable questions. Cuts what used to be hours of manual entry per test down to a review pass.</p>
     </div>
     <div class="build">
       <h3>Anti-cheating system</h3>
@@ -210,17 +204,8 @@
     </div>
   </section>
 
-  <section>
-    <h2>Elsewhere</h2>
-    <ul class="other-list">
-      <li><b>Brajwasi Travels</b> — <span>booking, a driver portal, and live GPS tracking for a family-run travel business.</span></li>
-      <li><b>SellKaro</b> — <span>a full-stack classifieds marketplace.</span></li>
-      <li><b>Jarvis OS</b> — <span>a personal AI system running fully local model inference, no cloud dependency.</span></li>
-    </ul>
-  </section>
-
   <footer>
-    I'm glad to walk through any part of this in more detail — the code, the architecture decisions, or the numbers above.
+    I'm glad to walk through any part of this in more detail — the code, the architecture decisions, or the numbers above. Email me at <a href="mailto:devesh@aitts.in">devesh@aitts.in</a>.
   </footer>
 
 </div>
