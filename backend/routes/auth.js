@@ -20,10 +20,11 @@ function setAdminCookie(res, token) {
 
 // POST /register
 // Called after Firebase creates the user on the frontend.
-// Body: { idToken, name, phone, coachingName, fatherName, fatherOccupation, whatsappNumber, batch }
+// Body: { idToken, name, phone, coachingName, fatherName, fatherOccupation, whatsappNumber, batch, cityState? (optional) }
 router.post('/register', async (req, res) => {
   try {
     const { idToken, name, phone, coachingName, fatherName, fatherOccupation, whatsappNumber, batch } = req.body;
+    const cityState = String(req.body.cityState || '').trim().slice(0, 80); // optional
 
     if (!idToken || !name || !phone || !coachingName || !fatherName || !fatherOccupation || !whatsappNumber || !batch)
       return res.status(400).json({ error: 'All fields are required' });
@@ -67,7 +68,7 @@ router.post('/register', async (req, res) => {
 
     await admin.auth().updateUser(decoded.uid, { displayName: name }).catch(() => {});
 
-    const profile = await User.create({ uid: decoded.uid, name, phone, coachingName, fatherName, fatherOccupation, whatsappNumber, batch });
+    const profile = await User.create({ uid: decoded.uid, name, phone, coachingName, fatherName, fatherOccupation, whatsappNumber, cityState, batch });
 
     res.status(201).json({
       message: 'Account created',
@@ -121,6 +122,7 @@ router.get('/me', authenticateStudent, (req, res) => {
       fatherName:       req.user.fatherName,
       fatherOccupation: req.user.fatherOccupation,
       whatsappNumber:   req.user.whatsappNumber,
+      cityState:        req.user.cityState || '',
     },
   });
 });
@@ -193,9 +195,10 @@ router.post('/forgot-attempts', async (req, res) => {
 // PUT /profile — update editable profile fields
 router.put('/profile', authenticateStudent, async (req, res) => {
   try {
-    const allowed = ['name', 'phone', 'coachingName', 'fatherName', 'fatherOccupation', 'whatsappNumber'];
+    const allowed = ['name', 'phone', 'coachingName', 'fatherName', 'fatherOccupation', 'whatsappNumber', 'cityState'];
     const updates = {};
-    allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f].trim(); });
+    allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = String(req.body[f]).trim(); });
+    if (updates.cityState) updates.cityState = updates.cityState.slice(0, 80);
 
     if (updates.phone) {
       const existing = await User.getByPhone(updates.phone);

@@ -42,6 +42,7 @@ async function create(data) {
   const item = {
     uid: data.uid, name: data.name, phone: data.phone, coachingName: data.coachingName,
     fatherName: data.fatherName, fatherOccupation: data.fatherOccupation, whatsappNumber: data.whatsappNumber,
+    cityState: data.cityState || '', // optional — older accounts simply don't have it
     batch: data.batch,
     totalTests: 0, totalMarks: 0, highestMarks: 0,
     gsiType: 'USER', // constant partition value for RankIndex — see table doc above

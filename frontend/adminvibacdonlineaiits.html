@@ -130,6 +130,7 @@ textarea{resize:vertical}
 .rank-table,.students-table{width:100%;border-collapse:collapse;font-size:12px}
 .rank-table th,.students-table th{background:#f0ebe0;color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:1px;padding:9px 12px;text-align:left;white-space:nowrap;border-bottom:1.5px solid var(--border)}
 .rank-table td,.students-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text)}
+.students-table td{white-space:nowrap}
 .rank-table tr:hover td,.students-table tr:hover td{background:var(--gold-pale)}
 .marks-cell{font-family:var(--font-mono);font-weight:600;color:var(--gold)}
 .count-pill{background:var(--gold);color:#fff;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px}
@@ -477,7 +478,7 @@ textarea{resize:vertical}
         <button class="bfbtn" id="sbf-12" onclick="filterByBatch('12')">Class 12</button>
         <button class="bfbtn" id="sbf-dropper" onclick="filterByBatch('dropper')">Dropper</button>
       </div>
-      <div class="search-row"><input type="search" id="student-search" placeholder="Search name, email, phone, coaching..." oninput="filterStudents()"></div>
+      <div class="search-row"><input type="search" id="student-search" placeholder="Search name, email, phone, coaching, father, city..." oninput="filterStudents()"></div>
       <div id="students-table"></div>
     </div>
 
@@ -1099,7 +1100,7 @@ function filterStudents(){
   var q=gv('student-search').toLowerCase();var batch=S.allStudentsBatch;
   var list=S.allStudents.filter(function(s){
     var bMatch=!batch||(s.batch===batch);
-    var sMatch=!q||(s.name||'').toLowerCase().indexOf(q)!==-1||(s.email||'').toLowerCase().indexOf(q)!==-1||(s.phone||'').indexOf(q)!==-1||(s.coachingName||'').toLowerCase().indexOf(q)!==-1;
+    var sMatch=!q||(s.name||'').toLowerCase().indexOf(q)!==-1||(s.email||'').toLowerCase().indexOf(q)!==-1||(s.phone||'').indexOf(q)!==-1||(s.coachingName||'').toLowerCase().indexOf(q)!==-1||(s.fatherName||'').toLowerCase().indexOf(q)!==-1||(s.cityState||'').toLowerCase().indexOf(q)!==-1||(s.whatsappNumber||'').indexOf(q)!==-1;
     return bMatch&&sMatch;
   });
   renderStudents(list);
@@ -1108,13 +1109,13 @@ function renderStudents(list){
   var c=document.getElementById('students-table');if(!c)return;
   if(!list.length){c.innerHTML='<p style="text-align:center;color:#888;padding:28px">No students found.</p>';return;}
   var bMap={'11':'Class 11','12':'Class 12','dropper':'Dropper'};
-  var html='<div style="overflow-x:auto"><table class="students-table"><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Batch</th><th>Coaching</th><th>Tests</th><th>Total Marks</th><th>Joined</th><th>Actions</th></tr></thead><tbody>';
+  var html='<div style="overflow-x:auto"><table class="students-table"><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>WhatsApp</th><th>Batch</th><th>Coaching</th><th>Father</th><th>Father Occ.</th><th>City/State</th><th>Tests</th><th>Total Marks</th><th>Joined</th><th>Actions</th></tr></thead><tbody>';
   list.forEach(function(s,i){
     var bColors={'11':'#dbeafe:#1e40af','12':'#dcfce7:#15803d','dropper':'#fef3c7:#92400e'}[s.batch]||'#f0f0f0:#555';
     var bc=bColors.split(':');
-    html+='<tr><td>'+(i+1)+'</td><td><strong>'+esc(s.name)+'</strong></td><td style="font-size:11px">'+esc(s.email)+'</td><td>'+esc(s.phone||'-')+'</td>';
+    html+='<tr><td>'+(i+1)+'</td><td><strong>'+esc(s.name)+'</strong></td><td style="font-size:11px">'+esc(s.email)+'</td><td>'+esc(s.phone||'-')+'</td><td>'+esc(s.whatsappNumber||'-')+'</td>';
     html+='<td><span style="padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;background:'+bc[0]+';color:'+bc[1]+'">'+esc(bMap[s.batch]||s.batch||'-')+'</span></td>';
-    html+='<td>'+esc(s.coachingName||'-')+'</td><td>'+(s.totalTests||0)+'</td><td style="font-family:monospace;color:#b8860b">'+(s.totalMarks||0)+'</td>';
+    html+='<td>'+esc(s.coachingName||'-')+'</td><td>'+esc(s.fatherName||'-')+'</td><td>'+esc(s.fatherOccupation||'-')+'</td><td>'+esc(s.cityState||'-')+'</td><td>'+(s.totalTests||0)+'</td><td style="font-family:monospace;color:#b8860b">'+(s.totalMarks||0)+'</td>';
     html+='<td style="font-size:11px">'+new Date(s.createdAt).toLocaleDateString('en-IN')+'</td>';
     html+='<td style="white-space:nowrap">';
     html+='<button class="btn btn-red btn-sm" style="margin-right:4px" onclick="deleteStudent(\''+s._id+'\',\''+esc(s.name)+'\')" title="Delete"><i class="fas fa-trash"></i></button>';

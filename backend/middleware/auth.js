@@ -33,6 +33,7 @@ exports.authenticateStudent = async (req, res, next) => {
       fatherName:       profile.fatherName,
       fatherOccupation:  profile.fatherOccupation,
       whatsappNumber:   profile.whatsappNumber,
+      cityState:        profile.cityState || '',
     };
     next();
   } catch (err) {

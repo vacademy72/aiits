@@ -493,6 +493,7 @@ textarea{resize:vertical}
           <div class="fg"><label>Coaching Name *</label><input type="text" id="reg-coaching" placeholder="Your institute" required></div>
           <div class="fg"><label>Father Name *</label><input type="text" id="reg-father" placeholder="Father full name" required></div>
           <div class="fg fg-full"><label>Father Occupation *</label><input type="text" id="reg-occupation" placeholder="e.g. Farmer, Business, Service" required></div>
+          <div class="fg fg-full"><label>City / State <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label><input type="text" id="reg-city" maxlength="80" placeholder="e.g. Agra, Uttar Pradesh"></div>
           <div class="fg fg-full">
             <label>Password *</label>
             <div class="pw-wrap"><input type="password" id="reg-password" placeholder="Min 6 characters" required minlength="6"><button type="button" class="pw-toggle" onclick="togglePw('reg-password',this)"><i class="fas fa-eye"></i></button></div>
@@ -657,6 +658,7 @@ textarea{resize:vertical}
               <div class="fg"><label>Coaching Name</label><input type="text" id="edit-coaching" placeholder="Institute name"></div>
               <div class="fg"><label>Father Name</label><input type="text" id="edit-father" placeholder="Father full name"></div>
               <div class="fg"><label>Father Occupation</label><input type="text" id="edit-occ" placeholder="e.g. Farmer, Business"></div>
+              <div class="fg fg-full"><label>City / State <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label><input type="text" id="edit-city" maxlength="80" placeholder="e.g. Agra, Uttar Pradesh"></div>
             </div>
             <div style="display:flex;gap:8px;margin-top:12px">
               <button class="btn btn-gold" onclick="saveProfile()" id="save-profile-btn"><i class="fas fa-save"></i> Save Changes</button>
@@ -1083,7 +1085,7 @@ function handleRegister(e){
   if(!fbAuth){toast('Please wait a moment and try again.','error');btn.disabled=false;btn.innerHTML='<i class="fas fa-user-plus"></i> Create Account';return;}
   fbAuth.createUserWithEmailAndPassword(email,password).then(function(cred){
     return cred.user.getIdToken().then(function(idToken){
-      var payload={idToken:idToken,name:gv('reg-name'),phone:gv('reg-phone'),coachingName:gv('reg-coaching'),fatherName:gv('reg-father'),fatherOccupation:gv('reg-occupation'),whatsappNumber:gv('reg-whatsapp'),batch:batch};
+      var payload={idToken:idToken,name:gv('reg-name'),phone:gv('reg-phone'),coachingName:gv('reg-coaching'),fatherName:gv('reg-father'),fatherOccupation:gv('reg-occupation'),whatsappNumber:gv('reg-whatsapp'),cityState:gv('reg-city'),batch:batch};
       return fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(res){
         return res.json().then(function(data){if(!res.ok){if(cred&&cred.user)cred.user.delete().catch(function(){});throw new Error(data.error||'Registration failed');}return data;});
       });
@@ -1217,7 +1219,7 @@ function updateNavUser(){
   var bp=document.getElementById('nav-batch-pill');
   if(bp){var bMap={'11':'Class 11','12':'Class 12','dropper':'Dropper'};var bCls={'11':'batch-11','12':'batch-12','dropper':'batch-drop'};bp.textContent=bMap[S.user.batch]||S.user.batch;bp.className='batch-pill '+(bCls[S.user.batch]||'');}
   var pi=document.getElementById('profile-info');
-  if(pi)pi.innerHTML='<strong>Name:</strong> '+esc(S.user.name)+'<br><strong>Email:</strong> '+esc(S.user.email)+'<br><strong>Phone:</strong> '+esc(S.user.phone||'--')+'<br><strong>WhatsApp:</strong> '+esc(S.user.whatsappNumber||'--')+'<br><strong>Batch:</strong> '+(bMap&&bMap[S.user.batch]||S.user.batch)+'<br><strong>Coaching:</strong> '+esc(S.user.coachingName||'--')+'<br><strong>Father:</strong> '+esc(S.user.fatherName||'--');
+  if(pi)pi.innerHTML='<strong>Name:</strong> '+esc(S.user.name)+'<br><strong>Email:</strong> '+esc(S.user.email)+'<br><strong>Phone:</strong> '+esc(S.user.phone||'--')+'<br><strong>WhatsApp:</strong> '+esc(S.user.whatsappNumber||'--')+'<br><strong>Batch:</strong> '+(bMap&&bMap[S.user.batch]||S.user.batch)+'<br><strong>Coaching:</strong> '+esc(S.user.coachingName||'--')+'<br><strong>Father:</strong> '+esc(S.user.fatherName||'--')+'<br><strong>City/State:</strong> '+esc(S.user.cityState||'--');
   var em=document.getElementById('current-email-display');if(em)em.textContent=S.user.email||'';
   updateNotifButton();
 }
@@ -1750,6 +1752,7 @@ function toggleEditProfile(){
     document.getElementById('edit-coaching').value=S.user.coachingName||'';
     document.getElementById('edit-father').value=S.user.fatherName||'';
     document.getElementById('edit-occ').value=S.user.fatherOccupation||'';
+    document.getElementById('edit-city').value=S.user.cityState||'';
     f.classList.remove('hidden');
   } else {
     f.classList.add('hidden');
@@ -1764,7 +1767,8 @@ function saveProfile(){
     whatsappNumber:document.getElementById('edit-whatsapp').value.trim(),
     coachingName:document.getElementById('edit-coaching').value.trim(),
     fatherName:document.getElementById('edit-father').value.trim(),
-    fatherOccupation:document.getElementById('edit-occ').value.trim()
+    fatherOccupation:document.getElementById('edit-occ').value.trim(),
+    cityState:document.getElementById('edit-city').value.trim()
   };
   if(!payload.name||!payload.phone){toast('Name and phone are required','error');return;}
   btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Saving...';
