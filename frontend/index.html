@@ -328,12 +328,9 @@ textarea{resize:vertical}
 .mob-btn{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:10px;font-family:var(--font);padding:5px 8px;border-radius:var(--radius-sm);transition:var(--transition)}
 .mob-btn i{font-size:17px}
 .mob-btn.active,.mob-btn:hover{color:var(--gold)}
-<<<<<<< HEAD
 .ask-ai-btn{margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:999px;border:1.5px solid var(--gold-border);background:var(--gold-pale);color:var(--gold);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);transition:var(--transition)}
 .ask-ai-btn:hover{background:var(--gold);color:#fff}
 .mob-nav.has-tools .mob-btn{padding:5px 3px;flex:1;min-width:0}
-=======
->>>>>>> 45b6325181c2ac30b7dde54a0fcacccb3eeab99c
 /* MODALS */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px}
 .modal-box{background:var(--bg-card);border:1.5px solid var(--gold-border);border-radius:var(--radius);padding:28px;max-width:400px;width:100%;text-align:center;box-shadow:var(--shadow-md)}
@@ -575,10 +572,7 @@ textarea{resize:vertical}
       <button class="nav-link" onclick="switchTab('leaderboard')"><i class="fas fa-trophy"></i> Leaderboard</button>
       <button class="nav-link" onclick="switchTab('gallery')"><i class="fas fa-images"></i> Gallery</button>
       <button class="nav-link" style="position:relative" onclick="switchTab('chat')"><i class="fas fa-comments"></i> Chat<span class="chat-unread-dot" style="display:none"></span></button>
-<<<<<<< HEAD
       <button class="nav-link tools-nav hidden" onclick="switchTab('tools')"><i class="fas fa-toolbox"></i> Tools</button>
-=======
->>>>>>> 45b6325181c2ac30b7dde54a0fcacccb3eeab99c
       <button class="nav-link" onclick="switchTab('settings')"><i class="fas fa-cog"></i> Account</button>
     </div>
     <div class="nav-right">
@@ -593,10 +587,7 @@ textarea{resize:vertical}
     <button class="mob-btn" onclick="switchTab('leaderboard')"><i class="fas fa-trophy"></i><span>Board</span></button>
     <button class="mob-btn" onclick="switchTab('gallery')"><i class="fas fa-images"></i><span>Gallery</span></button>
     <button class="mob-btn" onclick="switchTab('chat')"><i class="fas fa-comments"></i><span>Chat</span><span class="chat-unread-dot" style="display:none"></span></button>
-<<<<<<< HEAD
     <button class="mob-btn tools-nav hidden" onclick="switchTab('tools')"><i class="fas fa-toolbox"></i><span>Tools</span></button>
-=======
->>>>>>> 45b6325181c2ac30b7dde54a0fcacccb3eeab99c
     <button class="mob-btn" onclick="switchTab('settings')"><i class="fas fa-cog"></i><span>Account</span></button>
   </div>
   <div class="dash-container">
@@ -651,14 +642,11 @@ textarea{resize:vertical}
       <div class="dtab-header"><h3><i class="fas fa-images" style="color:var(--gold)"></i> Gallery -- Vibrant Academy</h3></div>
       <div id="student-gallery" class="gallery-grid"></div>
     </div>
-<<<<<<< HEAD
     <!-- TOOLS TAB (content is injected on demand by ai-tools.js; empty until a student opens it) -->
     <div id="dash-tab-tools" class="dtab">
       <div class="dtab-header"><h3><i class="fas fa-toolbox" style="color:var(--gold)"></i> Study Tools</h3></div>
       <div id="tools-root"><p style="color:var(--text-muted);padding:16px">Loading tools...</p></div>
     </div>
-=======
->>>>>>> 45b6325181c2ac30b7dde54a0fcacccb3eeab99c
     <!-- SETTINGS TAB -->
     <div id="dash-tab-settings" class="dtab">
       <div class="dtab-header"><h3><i class="fas fa-cog" style="color:var(--gold)"></i> My Account</h3></div>
@@ -822,11 +810,7 @@ textarea{resize:vertical}
       <button class="btn btn-ghost" onclick="showPage('page-dashboard');loadTests()"><i class="fas fa-home"></i> Dashboard</button>
     </div>
     <div id="analysis-panel" class="analysis-panel hidden">
-<<<<<<< HEAD
       <h3 class="panel-title"><i class="fas fa-microscope" style="color:var(--gold)"></i> Question Analysis<span id="ask-ai-slot" style="margin-left:auto"></span></h3>
-=======
-      <h3 class="panel-title"><i class="fas fa-microscope" style="color:var(--gold)"></i> Question Analysis</h3>
->>>>>>> 45b6325181c2ac30b7dde54a0fcacccb3eeab99c
       <div id="analysis-items"></div>
     </div>
     <div id="ranking-panel" class="analysis-panel hidden">
@@ -1271,7 +1255,6 @@ function deleteAccount(){
   }).catch(function(err){toast(err.message||'Failed to delete account','error');});
 }
 
-<<<<<<< HEAD
 function loadDashboard(){updateNavUser();loadTests();loadFeatures();}
 
 // ---- Admin feature switches (Tools tab / Ask AI) ----------------------------
@@ -1321,9 +1304,6 @@ function qtTick(newIdx){
   S.qEnter=now;if(newIdx!=null)S.qtIdx=newIdx;
 }
 function qtUserKey(){return (S.user&&(S.user.uid||S.user._id||S.user.email))||'anon';}
-=======
-function loadDashboard(){updateNavUser();loadTests();}
->>>>>>> 45b6325181c2ac30b7dde54a0fcacccb3eeab99c
 
 function switchTab(tab){
   document.querySelectorAll('#page-dashboard .dtab').forEach(function(t){t.classList.remove('active');});
@@ -1336,13 +1316,10 @@ function switchTab(tab){
   else if(tab==='chat'){if(window.socket)initChat();showChatUnreadDot(false);}
   else if(tab==='gallery')loadStudentGallery();
   else if(tab==='settings')updateNavUser();
-<<<<<<< HEAD
   if(tab==='tools'){
     var tr=document.getElementById('tools-root');
     if(FEAT.tools&&tr)loadAiTools().then(function(T){T.mount(tr);}).catch(function(e){tr.innerHTML='<p style="color:var(--red);padding:16px">'+esc(e.message)+'</p>';});
   } else if(window.AIITSTools){window.AIITSTools.pause();}
-=======
->>>>>>> 45b6325181c2ac30b7dde54a0fcacccb3eeab99c
 }
 
 function loadTests(){
@@ -1458,11 +1435,7 @@ function loadTestPage(test){
     S.answers={};Object.keys(test.resumeData.savedAnswers).forEach(function(k){S.answers[parseInt(k)]=test.resumeData.savedAnswers[k];});
     S.violations=test.resumeData.violations||0;
   } else {S.answers={};S.violations=0;}
-<<<<<<< HEAD
   S.qIdx=0;S.qTimes=[];S.qEnter=0;S.qtIdx=null;S.startTime=Date.now();S.timerTotal=test.duration*60;S.timerLeft=test.duration*60;
-=======
-  S.qIdx=0;S.startTime=Date.now();S.timerTotal=test.duration*60;S.timerLeft=test.duration*60;
->>>>>>> 45b6325181c2ac30b7dde54a0fcacccb3eeab99c
   setEl('test-subject-badge',test.subject);setEl('test-title-hdr',test.title);setEl('tot-q',test.questions.length);
   buildPalette(test.questions.length);
   if(S.timerIv)clearInterval(S.timerIv);S.timerIv=setInterval(tickTimer,1000);
@@ -1503,11 +1476,7 @@ function buildPalette(n){var g=document.getElementById('palette-grid');if(!g)ret
 
 function renderQ(idx){
   var test=S.currentTest;if(!test||idx<0||idx>=test.questions.length)return;
-<<<<<<< HEAD
   var q=test.questions[idx];S.qIdx=idx;qtTick(idx);
-=======
-  var q=test.questions[idx];S.qIdx=idx;
->>>>>>> 45b6325181c2ac30b7dde54a0fcacccb3eeab99c
   var badge=document.getElementById('q-badge');if(badge)badge.textContent='Q'+(idx+1);
   var mcBadge=document.getElementById('q-mc-badge');if(mcBadge){if(q.isMultiChoice)mcBadge.classList.remove('hidden');else mcBadge.classList.add('hidden');}
   document.getElementById('q-text').innerHTML=q.questionText||'';
@@ -1611,11 +1580,8 @@ function submitTest(){
   if(S.timerIv)clearInterval(S.timerIv);
   teardownAntiCheat();
   var timeTaken=Math.max(0,S.timerTotal-S.timerLeft);
-<<<<<<< HEAD
   qtTick(null);
   try{var _qt=S.currentTest.questions.map(function(_,i){return (S.qTimes&&S.qTimes[i])||0;});localStorage.setItem('aiits_qt_'+qtUserKey()+'_'+S.currentTest._id,JSON.stringify(_qt));}catch(e){}
-=======
->>>>>>> 45b6325181c2ac30b7dde54a0fcacccb3eeab99c
   var answers=S.currentTest.questions.map(function(q,i){
     var ans=S.answers[i];
     if(q.isMultiChoice)return{questionId:q._id,selectedOptions:Array.isArray(ans)?ans:[]};
@@ -1659,10 +1625,7 @@ function viewAnalysis(){
         (q.explanation?'<div style="margin-top:6px;padding:8px 10px;background:var(--gold-pale);border-radius:6px;font-size:12px"><i class="fas fa-lightbulb" style="color:var(--gold)"></i> '+esc(q.explanation)+'</div>':'')+
         '</div>';
     }).join('');
-<<<<<<< HEAD
     var slot=document.getElementById('ask-ai-slot');if(slot)slot.innerHTML=askAiBtn(testId,result);
-=======
->>>>>>> 45b6325181c2ac30b7dde54a0fcacccb3eeab99c
     panel.classList.remove('hidden');panel.scrollIntoView({behavior:'smooth'});
   }).catch(function(err){toast(err.message,'error');});
 }
@@ -1771,11 +1734,7 @@ function showAnalysisModal(testId){
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px';
   modal.innerHTML='<div style="background:var(--bg-card);border-radius:12px;padding:22px;max-width:760px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 4px 24px rgba(0,0,0,0.2)">'+
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'+
-<<<<<<< HEAD
     '<h3 style="margin:0;display:flex;align-items:center;gap:10px;flex:1"><span><i class="fas fa-chart-line" style="color:var(--gold)"></i> Test Analysis</span><span id="an-ask-slot"></span></h3>'+
-=======
-    '<h3 style="margin:0"><i class="fas fa-chart-line" style="color:var(--gold)"></i> Test Analysis</h3>'+
->>>>>>> 45b6325181c2ac30b7dde54a0fcacccb3eeab99c
     '<button onclick="document.getElementById(\'an-modal\').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;line-height:1">&times;</button></div>'+
     '<div id="an-modal-content"><p style="color:var(--text-muted);text-align:center;padding:16px">Loading...</p></div></div>';
   document.body.appendChild(modal);
@@ -1783,10 +1742,7 @@ function showAnalysisModal(testId){
   api('/api/results/my/'+testId).then(function(data){
     var c=document.getElementById('an-modal-content');if(!c)return;
     var result=data.result,test=data.test;
-<<<<<<< HEAD
     var aslot=document.getElementById('an-ask-slot');if(aslot)aslot.innerHTML=askAiBtn(testId,result);
-=======
->>>>>>> 45b6325181c2ac30b7dde54a0fcacccb3eeab99c
     var ansByQ={};
     (result.answers||[]).forEach(function(a){ansByQ[a.questionId]=a;});
     var correct=result.correctAnswers||0,wrong=result.wrongAnswers||0,skip=result.notAttempted||0;

@@ -199,7 +199,6 @@ app.use('/api/rankings', require('./backend/routes/rankings'));
 app.use('/api/leaderboard', require('./backend/routes/leaderboard'));
 app.use('/api/chat',        require('./backend/routes/chat'));
 app.use('/api/push',     require('./backend/routes/push'));
-<<<<<<< HEAD
 app.use('/api/ai-analytics', require('./backend/routes/aiAnalytics')); // student "Ask AI" result analysis — see backend/utils/aiAnalytics.js
 
 // Tiny public read of the admin's student-feature switches (Tools tab / Ask AI).
@@ -212,8 +211,6 @@ app.get('/api/public/features', async (req,res) => {
     res.json(await require('./backend/utils/featureFlags').getFlags());
   } catch(err) { res.status(500).json({ error:err.message }); }
 });
-=======
->>>>>>> 45b6325181c2ac30b7dde54a0fcacccb3eeab99c
 
 app.get('/api/public/ad-images', async (req,res) => {
   try {

@@ -422,7 +422,6 @@ textarea{resize:vertical}
     <div id="atab-announce" class="atab">
       <div class="dtab-header"><h3><i class="fas fa-bullhorn" style="color:var(--gold)"></i> Push Notification & Chat</h3></div>
       <div class="form-card" style="max-width:580px;margin-bottom:16px">
-<<<<<<< HEAD
         <div class="fc-title" style="color:var(--gold)"><i class="fas fa-toggle-on"></i> Student Features</div>
         <p style="font-size:13px;color:#888;margin-bottom:12px">Switch features on/off for every student instantly. Changes reach students within a few minutes (their browsers cache the setting to keep the server light).</p>
         <div class="toggle-row"><label style="font-size:13px"><strong>Tools tab</strong> &mdash; Gemini chat &amp; 3D molecule viewer (runs in the student's browser, zero server load)</label><label class="tog"><input type="checkbox" id="feat-tools" onchange="saveFeature('tools',this)" disabled><span class="tog-sl"></span></label></div>
@@ -430,8 +429,6 @@ textarea{resize:vertical}
         <span id="feat-status" style="font-size:12px;color:#888">Loading...</span>
       </div>
       <div class="form-card" style="max-width:580px;margin-bottom:16px">
-=======
->>>>>>> 45b6325181c2ac30b7dde54a0fcacccb3eeab99c
         <div class="fc-title" style="color:var(--gold)"><i class="fas fa-comments"></i> Chat Control</div>
         <p style="font-size:13px;color:#888;margin-bottom:12px">Students see the Chat tab on their dashboard. Toggle mute to prevent students from sending messages.</p>
         <div style="display:flex;align-items:center;gap:12px">
@@ -595,11 +592,7 @@ function adminLogout(){
   showPage('page-login');toast('Logged out','info');
 }
 function initAdmin(){
-<<<<<<< HEAD
   loadAdminTests();loadAdminStats();loadAdminImages();loadDelTestSelect();loadFeatureFlags();
-=======
-  loadAdminTests();loadAdminStats();loadAdminImages();loadDelTestSelect();
->>>>>>> 45b6325181c2ac30b7dde54a0fcacccb3eeab99c
   if(socket){try{socket.emit('join-admin');socket.on('cheat-alert',function(d){toast('Cheat: '+d.name+' ('+d.violations+' violations'+(d.autoSubmitted?' AUTO SUBMITTED':'')+')','error',7000);});}catch(e){}}
 }
 function adminTab(tab){
@@ -1301,7 +1294,6 @@ function initAdminChat(){
   window.adminSocket.on('connect',function(){console.log('[AIITS Admin] Chat connected');});
 }
 
-<<<<<<< HEAD
 // STUDENT FEATURE SWITCHES (Tools tab / Ask AI)
 function loadFeatureFlags(){
   api('/api/admin/features').then(function(f){
@@ -1319,8 +1311,6 @@ function saveFeature(key,box){
   }).catch(function(e){box.checked=!box.checked;box.disabled=false;toast(e.message,'error');});
 }
 
-=======
->>>>>>> 45b6325181c2ac30b7dde54a0fcacccb3eeab99c
 // ADMIN CHAT MUTE TOGGLE
 function adminToggleMute(){
   api('/api/chat/mute',{method:'POST'}).then(function(r){

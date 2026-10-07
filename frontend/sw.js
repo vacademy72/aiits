@@ -7,11 +7,7 @@
 // token '<'" JSON-parse error client-side (Express's default HTML error
 // page being fed to res.json()). Bump this on every deploy touching
 // frontend/*.js or *.html, not just when something "feels" cache-related.
-<<<<<<< HEAD
 var CACHE = 'aiits-v8';
-=======
-var CACHE = 'aiits-v7';
->>>>>>> 45b6325181c2ac30b7dde54a0fcacccb3eeab99c
 var STATIC = ['/', '/manifest.json'];
 self.addEventListener('install', function(e) {
   e.waitUntil(caches.open(CACHE).then(function(c){ return c.addAll(STATIC); }).then(function(){ return self.skipWaiting(); }).catch(function(){ return self.skipWaiting(); }));
@@ -23,10 +19,7 @@ self.addEventListener('fetch', function(e) {
   var url = e.request.url;
   if (e.request.method !== 'GET') return;
   if (url.includes('/socket.io') || url.includes('google') || url.includes('cdnjs') || url.includes('doubleclick') || url.includes('adtrafficquality') || url.includes('sodar') || url.includes('pagead') || url.includes('adsbygoogle') || url.includes('fonts.g')) return;
-<<<<<<< HEAD
   if (new URL(url).origin !== self.location.origin) return; // Gemini / PubChem / RCSB / CDN requests go straight to the network
-=======
->>>>>>> 45b6325181c2ac30b7dde54a0fcacccb3eeab99c
   var p = new URL(url).pathname;
   if (p.startsWith('/api/')) {
     e.respondWith(fetch(e.request).catch(function(){ return new Response(JSON.stringify({ error:'Offline' }),{ status:503, headers:{ 'Content-Type':'application/json' } }); }));

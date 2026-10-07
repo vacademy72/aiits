@@ -330,7 +330,6 @@ router.delete('/students/batch/:batch', async (req, res) => {
 });
 
 // Ad Images — unchanged, still MongoDB
-<<<<<<< HEAD
 // Student feature switches (Tools tab + Ask AI) — see utils/featureFlags.js.
 router.get('/features', async (req, res) => {
   try { res.json(await require('../utils/featureFlags').getFlags()); }
@@ -346,8 +345,6 @@ router.put('/features', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-=======
->>>>>>> 45b6325181c2ac30b7dde54a0fcacccb3eeab99c
 router.get('/ad-images', async (req, res) => {
   try { res.json(await AdImage.find().sort({ createdAt: -1 })); }
   catch(err) { res.status(500).json({ error: err.message }); }
